@@ -1,0 +1,9 @@
+[package]
+name = "example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bind-java = { path = "../bind" }
+jni-sys = "0.3"
+jni = { version = "0.21", features = ["invocation"] }
