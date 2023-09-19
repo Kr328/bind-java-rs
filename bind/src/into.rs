@@ -2,7 +2,7 @@ use std::ptr::null_mut;
 
 use jni_sys::{
     jboolean, jbooleanArray, jbyte, jbyteArray, jchar, jcharArray, jdouble, jdoubleArray, jfloat, jfloatArray, jint, jintArray,
-    jlong, jlongArray, jobjectArray, jshort, jshortArray, jsize, jstring, JNI_FALSE, JNI_TRUE,
+    jlong, jlongArray, jobject, jobjectArray, jshort, jshortArray, jsize, jstring, JNI_FALSE, JNI_TRUE,
 };
 
 use crate::{call, with_pushed_frame, Context, Result};
@@ -11,11 +11,26 @@ pub trait IntoJava<T> {
     fn into_java(self, ctx: Context) -> Result<T>;
 }
 
-impl<T> IntoJava<T> for T {
-    fn into_java(self, _: Context) -> Result<T> {
-        Ok(self)
-    }
+macro_rules! primitive_impl {
+    ($typ:ty) => {
+        impl IntoJava<$typ> for $typ {
+            fn into_java(self, _: Context) -> Result<$typ> {
+                Ok(self)
+            }
+        }
+    };
 }
+
+primitive_impl!(jboolean);
+primitive_impl!(jbyte);
+primitive_impl!(jchar);
+primitive_impl!(jshort);
+primitive_impl!(jint);
+primitive_impl!(jlong);
+primitive_impl!(jfloat);
+primitive_impl!(jdouble);
+primitive_impl!(jobject);
+primitive_impl!(());
 
 impl IntoJava<jboolean> for bool {
     fn into_java(self, _: Context) -> Result<jboolean> {
@@ -32,6 +47,18 @@ impl IntoJava<jstring> for &str {
         let utf16_chars = self.encode_utf16().collect::<Vec<_>>();
 
         Ok(unsafe { call!(ctx, NewString, utf16_chars.as_ptr().cast(), utf16_chars.len() as jsize) })
+    }
+}
+
+impl IntoJava<jstring> for String {
+    fn into_java(self, ctx: Context) -> Result<jstring> {
+        IntoJava::into_java(self.as_str(), ctx)
+    }
+}
+
+impl IntoJava<jstring> for &String {
+    fn into_java(self, ctx: Context) -> Result<jstring> {
+        IntoJava::into_java(self.as_str(), ctx)
     }
 }
 

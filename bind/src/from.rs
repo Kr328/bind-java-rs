@@ -2,7 +2,7 @@ use std::ptr::null_mut;
 
 use jni_sys::{
     jboolean, jbooleanArray, jbyte, jbyteArray, jchar, jcharArray, jdouble, jdoubleArray, jfloat, jfloatArray, jint, jintArray,
-    jlong, jlongArray, jobjectArray, jshort, jshortArray, jsize, jstring, JNI_ABORT, JNI_FALSE,
+    jlong, jlongArray, jobject, jobjectArray, jshort, jshortArray, jsize, jstring, JNI_ABORT, JNI_FALSE,
 };
 
 use crate::{call, Context, Result};
@@ -11,15 +11,30 @@ pub trait FromJava<T>: Sized {
     unsafe fn from_java(value: T, ctx: Context) -> Result<Self>;
 }
 
-impl<T> FromJava<T> for T {
-    unsafe fn from_java(value: T, _: Context) -> Result<Self> {
-        Ok(value)
-    }
+macro_rules! primitive_impl {
+    ($typ:ty) => {
+        impl FromJava<$typ> for $typ {
+            unsafe fn from_java(value: $typ, _: Context) -> Result<Self> {
+                Ok(value)
+            }
+        }
+    };
 }
+
+primitive_impl!(jboolean);
+primitive_impl!(jbyte);
+primitive_impl!(jchar);
+primitive_impl!(jshort);
+primitive_impl!(jint);
+primitive_impl!(jlong);
+primitive_impl!(jfloat);
+primitive_impl!(jdouble);
+primitive_impl!(jobject);
+primitive_impl!(());
 
 impl FromJava<jstring> for String {
     unsafe fn from_java(value: jstring, ctx: Context) -> Result<Self> {
-        let length = unsafe { call!(ctx, GetStringUTFLength, value) };
+        let length = unsafe { call!(ctx, GetStringLength, value) };
         let addr = unsafe { call!(ctx, GetStringChars, value, null_mut()) };
 
         let slice = unsafe { std::slice::from_raw_parts(addr, length as usize) };
