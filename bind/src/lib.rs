@@ -1,4 +1,4 @@
-use jni_sys::{jclass, JNIEnv, jobject, jthrowable};
+use jni_sys::{jclass, jobject, jthrowable, JNIEnv};
 
 pub use bind::*;
 pub use bind_java_marco::bind_java;

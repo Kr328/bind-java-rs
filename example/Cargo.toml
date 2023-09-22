@@ -13,3 +13,5 @@ reqwest = "0.11"
 tokio = { version = "1.32", features = ["rt", "net"] }
 tempdir = "0.3"
 rand = "0.8"
+proc-macro2 = "1.0"
+quote = "1.0"

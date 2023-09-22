@@ -179,6 +179,8 @@ dependencies = [
  "bind-java",
  "jni",
  "jni-sys",
+ "proc-macro2",
+ "quote",
  "rand 0.8.5",
  "reqwest",
  "tempdir",

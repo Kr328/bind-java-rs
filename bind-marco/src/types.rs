@@ -5,22 +5,53 @@ use quote::format_ident;
 use syn::{
     bracketed,
     parse::{Parse, ParseStream},
-    punctuated::Punctuated,
-    Token,
     token::Bracket,
+    Token,
 };
 
-pub struct ClassName(pub Punctuated<Ident, Token![.]>);
+enum ClassNameSegment {
+    Ident(Ident),
+    Dot(Token![.]),
+    Dollar(Token![$]),
+}
+
+pub struct ClassName {
+    segments: Vec<ClassNameSegment>,
+}
 
 impl Parse for ClassName {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        Ok(ClassName(Punctuated::parse_separated_nonempty(input)?))
+        let mut segments: Vec<ClassNameSegment> = Vec::new();
+
+        loop {
+            segments.push(ClassNameSegment::Ident(input.parse()?));
+
+            if input.peek(Token![.]) {
+                segments.push(ClassNameSegment::Dot(input.parse()?));
+            } else if input.peek(Token![$]) {
+                segments.push(ClassNameSegment::Dollar(input.parse()?));
+            } else {
+                break;
+            }
+        }
+
+        Ok(ClassName { segments })
     }
 }
 
 impl ClassName {
     pub fn to_class_name(&self) -> String {
-        self.0.iter().map(|s| s.to_string()).collect::<Vec<_>>().join(".")
+        let mut result = String::new();
+
+        for x in &self.segments {
+            match x {
+                ClassNameSegment::Ident(ident) => result.push_str(&ident.to_string()),
+                ClassNameSegment::Dot(_) => result.push('.'),
+                ClassNameSegment::Dollar(_) => result.push('$'),
+            }
+        }
+
+        result
     }
 }
 
@@ -49,7 +80,7 @@ impl Parse for TypeName {
 
 impl TypeName {
     pub fn to_type(&self) -> Type {
-        let class_name = self.class_name.0.iter().map(|s| s.to_string()).collect::<Vec<_>>().join(".");
+        let class_name = self.class_name.to_class_name();
         let base_type = match class_name.as_str() {
             "void" => Type::Void,
             "boolean" => Type::Boolean,
