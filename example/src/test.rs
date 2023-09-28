@@ -132,8 +132,8 @@ fn compile_file_and_load_classes(ctx: Context, public_class_name: &str, content:
         let b_uri = JavaURI::bind(ctx, c_uri).unwrap();
         let o_uri: jobject = b_file.to_uri(ctx, o_file).unwrap();
 
-        let c_url = call!(ctx, FindClass, "java/net/URL\0".as_ptr().cast());
-        let o_url_array = call!(ctx, NewObjectArray, 1, c_url, b_uri.to_url(ctx, o_uri).unwrap());
+        let c_url = call!(v1_1, ctx, FindClass, "java/net/URL\0".as_ptr().cast());
+        let o_url_array = call!(v1_1, ctx, NewObjectArray, 1, c_url, b_uri.to_url(ctx, o_uri).unwrap());
         let c_url_class_loader = JavaUrlClassLoader::find_class(ctx, None).unwrap();
         let b_url_class_loader = JavaUrlClassLoader::bind(ctx, c_url_class_loader).unwrap();
         let o_url_class_loader: jobject = b_url_class_loader.new_instance(ctx, c_url_class_loader, o_url_array).unwrap();

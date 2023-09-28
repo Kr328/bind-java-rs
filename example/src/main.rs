@@ -41,6 +41,7 @@ fn main() {
         let hello = "hello";
         let hello_bytes = hello.as_bytes();
         let hello_buffer = call!(
+            v1_4,
             ctx,
             NewDirectByteBuffer,
             hello_bytes.as_ptr().cast_mut().cast(),

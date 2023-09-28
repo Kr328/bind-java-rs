@@ -46,14 +46,14 @@ none_mut_object!(jfieldID);
 none_mut_object!(());
 
 pub fn with_pushed_frame<R: AsMutObject, F: FnOnce() -> R>(ctx: Context, min_size: usize, f: F) -> R {
-    unsafe { call!(ctx, PushLocalFrame, min_size as jsize) };
+    unsafe { call!(v1_2, ctx, PushLocalFrame, min_size as jsize) };
 
     let mut r = f();
 
     if let Some(object) = r.as_mut_object() {
-        *object = unsafe { call!(ctx, PopLocalFrame, *object) };
+        *object = unsafe { call!(v1_2, ctx, PopLocalFrame, *object) };
     } else {
-        unsafe { call!(ctx, PopLocalFrame, null_mut()) };
+        unsafe { call!(v1_2, ctx, PopLocalFrame, null_mut()) };
     }
 
     r

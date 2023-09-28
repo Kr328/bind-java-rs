@@ -9,5 +9,6 @@ pub fn with_java_vm<R, F: FnOnce(Context) -> R>(f: F) -> R {
     let vm = VM.get_or_init(|| JavaVM::new(jni::InitArgsBuilder::new().build().unwrap()).unwrap());
     let env = vm.attach_current_thread().unwrap();
 
-    f(env.get_raw())
+    // temp workaround for jni crate not match jni-sys
+    f(unsafe { std::mem::transmute(env.get_raw()) })
 }

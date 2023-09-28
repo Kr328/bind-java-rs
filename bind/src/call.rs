@@ -1,12 +1,12 @@
 #[macro_export]
 macro_rules! call {
-    ($ctx:expr, $func_name:ident) => {
-        (**($ctx)).$func_name.unwrap()($ctx)
+    ($target_api:ident, $ctx:expr, $func_name:ident) => {
+        ((**($ctx)).$target_api.$func_name)($ctx)
     };
-    ($ctx:expr, $func_name:ident,) => {
-        (**($ctx)).$func_name.unwrap()($ctx)
+    ($target_api:ident, $ctx:expr, $func_name:ident,) => {
+        ((**($ctx)).$target_api.$func_name)($ctx)
     };
-    ($ctx:expr, $func_name:ident, $($args:expr),*) => {
-        (**($ctx)).$func_name.unwrap()($ctx, $($args),*)
+    ($target_api:ident, $ctx:expr, $func_name:ident, $($args:expr),*) => {
+        ((**($ctx)).$target_api.$func_name)($ctx, $($args),*)
     };
 }

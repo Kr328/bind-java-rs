@@ -9,7 +9,7 @@ macro_rules! _invoke {
         let _r = $crate::with_pushed_frame($ctx, 16, move || {
             $crate::invoke_with_throwable(
                 $ctx,
-                move || $crate::call!($ctx, $func_name, $target, $member_id)
+                move || $crate::call!(v1_1, $ctx, $func_name, $target, $member_id)
             )
         })?;
 
@@ -24,7 +24,7 @@ macro_rules! _invoke {
 
             $crate::invoke_with_throwable(
                 $ctx,
-                move || $crate::call!($ctx, $func_name, $target, $method_id, $($args),*)
+                move || $crate::call!(v1_1, $ctx, $func_name, $target, $method_id, $($args),*)
             )
         })?;
 
@@ -33,20 +33,20 @@ macro_rules! _invoke {
 }
 
 pub fn invoke_with_throwable<R, F: FnOnce() -> R>(ctx: Context, f: F) -> Result<R> {
-    let suppressed_throwable = unsafe { call!(ctx, ExceptionOccurred) };
+    let suppressed_throwable = unsafe { call!(v1_1, ctx, ExceptionOccurred) };
     if suppressed_throwable != null_mut() {
-        unsafe { call!(ctx, ExceptionClear) };
+        unsafe { call!(v1_1, ctx, ExceptionClear) };
     }
 
     let r = f();
 
-    let throwable = unsafe { call!(ctx, ExceptionOccurred) };
+    let throwable = unsafe { call!(v1_1, ctx, ExceptionOccurred) };
     if throwable != null_mut() {
-        unsafe { call!(ctx, ExceptionClear) };
+        unsafe { call!(v1_1, ctx, ExceptionClear) };
     }
 
     if suppressed_throwable != null_mut() {
-        unsafe { call!(ctx, Throw, suppressed_throwable) };
+        unsafe { call!(v1_1, ctx, Throw, suppressed_throwable) };
     }
 
     if throwable != null_mut() {
