@@ -4,8 +4,8 @@ use jni_sys::{jfieldID, jmethodID};
 
 use crate::{call, invoke_with_throwable, Class, Context, Result};
 
-pub fn find_class(ctx: Context, name: &str) -> Result<Class> {
-    let name = CString::new(name).unwrap();
+pub fn find_class(ctx: Context, internal_name: &str) -> Result<Class> {
+    let name = CString::new(internal_name).unwrap();
 
     unsafe { invoke_with_throwable(ctx, || call!(ctx, FindClass, name.as_ptr())) }
 }

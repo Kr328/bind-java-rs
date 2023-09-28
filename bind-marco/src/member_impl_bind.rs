@@ -17,7 +17,7 @@ impl<'a> ToTokens for ImplBindForMember<'a> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let field_name = StructForMember::new(self.member).field_name();
 
-        fn method_signature(return_type: &Type, argument_types: impl Iterator<Item=Type>) -> String {
+        fn method_signature(return_type: &Type, argument_types: impl Iterator<Item = Type>) -> String {
             let mut result = String::new();
 
             result.push('(');

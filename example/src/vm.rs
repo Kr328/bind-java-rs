@@ -1,6 +1,8 @@
-use bind_java::Context;
-use jni::JavaVM;
 use std::sync::OnceLock;
+
+use jni::JavaVM;
+
+use bind_java::Context;
 
 pub fn with_java_vm<R, F: FnOnce(Context) -> R>(f: F) -> R {
     static VM: OnceLock<JavaVM> = OnceLock::new();

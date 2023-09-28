@@ -4,8 +4,8 @@ use syn::{
     braced,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Token,
     token::Brace,
+    Token,
 };
 
 use crate::{
@@ -71,11 +71,15 @@ impl ToTokens for Class {
         let bind_ident = Ident::new("bind", name.span());
         let find_class = if let Some(class_name) = class_name {
             let find_class_name = Ident::new("find_class", name.span());
-            let class_name = class_name.replace('.', "/");
+            let internal_class_name = class_name.replace('.', "/");
 
             quote! {
-                pub fn #find_class_name(ctx: ::bind_java::Context, loader: &impl ::bind_java::ClassLoader) -> ::bind_java::Result<::bind_java::Class> {
-                    loader.load_class(ctx, #class_name)
+                pub fn #find_class_name(ctx: ::bind_java::Context, loader: ::std::option::Option<&dyn ::bind_java::ClassLoader>) -> ::bind_java::Result<::bind_java::Class> {
+                    if let Some(loader) = loader {
+                        loader.load_class(ctx, #class_name)
+                    } else {
+                        ::bind_java::find_class(ctx, #internal_class_name)
+                    }
                 }
             }
         } else {
