@@ -6,9 +6,11 @@ use crate::{
     member_struct::StructForMember,
     modifier::{Modifier, ModifiersExt},
     repeat::Repeat,
+    signature,
     types::Type,
 };
 
+#[derive(Copy, Clone)]
 enum Target {
     This,
     Class,
@@ -61,6 +63,43 @@ fn build_invoke_func<'a>(
                 #target_name,
                 self.#id_field_name,
                 #(#args_names),*
+            )
+        }
+    }
+}
+
+fn build_register_func(
+    name: &Ident,
+    return_type: &Type,
+    target: Target,
+    method_name: &str,
+    arguments: &[(Ident, Type)],
+) -> TokenStream {
+    let signature = signature::method_signature(return_type, arguments.iter().map(|t| t.1.clone()));
+
+    let args_types = arguments.iter().map(|t| t.1.render_jni_type()).collect::<Vec<_>>();
+    let return_type = return_type.render_jni_type();
+    let target_type = match target {
+        Target::This => quote! { ::bind_java::Object },
+        Target::Class => quote! { ::bind_java::Class },
+    };
+
+    quote! {
+        pub unsafe fn #name (
+            ctx: ::bind_java::Context,
+            class: ::bind_java::Class,
+            handler: extern "system" fn(
+                ::bind_java::Context,
+                #target_type,
+                #(#args_types),*
+            ) -> #return_type,
+        ) -> ::bind_java::Result<()> {
+            ::bind_java::register_native_method(
+                ctx,
+                class,
+                #method_name,
+                #signature,
+                handler as *const (),
             )
         }
     }
@@ -125,20 +164,32 @@ impl<'a> ToTokens for ImplForMember<'a> {
                 annotations: _annotations,
                 modifiers,
                 return_type,
-                name: _name,
+                name,
                 _paren,
                 arguments,
             } => {
                 let return_type = return_type.to_type();
+                let target = Target::from_modifiers(modifiers);
+                let arguments = arguments.iter().map(|a| a.into()).collect::<Vec<_>>();
 
                 tokens.extend(build_invoke_func(
                     &rs_name,
                     &return_type,
-                    Target::from_modifiers(modifiers),
+                    target,
                     &resolve_call_func_name(&return_type, modifiers),
                     &field_name,
-                    &arguments.iter().map(|a| a.into()).collect::<Vec<_>>(),
+                    &arguments,
                 ));
+
+                if modifiers.is_native() {
+                    tokens.extend(build_register_func(
+                        &format_ident!("register_{}", rs_name),
+                        &return_type,
+                        target,
+                        &name.to_string(),
+                        &arguments,
+                    ))
+                }
             }
             Member::Field {
                 annotations: _annotations,

@@ -1,9 +1,9 @@
 use proc_macro2::Ident;
 use syn::{
+    LitStr,
     parenthesized,
     parse::{Parse, ParseStream},
-    token::Paren,
-    LitStr, Token,
+    Token, token::Paren,
 };
 
 use crate::{

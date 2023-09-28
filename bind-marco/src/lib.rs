@@ -12,6 +12,7 @@ mod member_impl_bind;
 mod member_struct;
 mod modifier;
 mod repeat;
+mod signature;
 mod types;
 
 #[proc_macro]

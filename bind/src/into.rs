@@ -5,7 +5,7 @@ use jni_sys::{
     jlong, jlongArray, jobject, jobjectArray, jshort, jshortArray, jsize, jstring,
 };
 
-use crate::{call, with_pushed_frame, Context, Result};
+use crate::{call, Context, Result, with_pushed_frame};
 
 pub trait IntoJava<T> {
     fn into_java(self, ctx: Context) -> Result<T>;

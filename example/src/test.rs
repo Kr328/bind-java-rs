@@ -1,10 +1,10 @@
 use std::process::Stdio;
 
-use jni_sys::{jobject, jstring};
+use jni_sys::{jint, jobject, jstring};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use bind_java::{bind_java, call, Class, ClassLoader, Context, FromJava, IntoJava, Object};
+use bind_java::{bind_java, call, system_fn, Class, ClassLoader, Context, FromJava, IntoJava, Object};
 
 use crate::vm::with_java_vm;
 
@@ -185,6 +185,49 @@ pub fn test_inner_class() {
             let value: String = b_inner.get_value(env, o_inner).unwrap();
 
             assert_eq!("STRING FROM INNER CLASS", value);
+        }
+    });
+}
+
+#[test]
+pub fn test_register_native() {
+    with_java_vm(|env| {
+        let loader = compile_file_and_load_classes(
+            env,
+            "RustNativeTest",
+            quote! {
+                public class RustNativeTest {
+                    private static native int nativeCall(int value);
+
+                    public static int callNative(int value) {
+                        return nativeCall(value);
+                    }
+                }
+            },
+        );
+
+        bind_java! {
+            @ClassName("RustNativeTest")
+            class RustNativeTest {
+                static native int nativeCall(int value);
+
+                static int callNative(int value);
+            }
+        }
+
+        unsafe {
+            let c_test = RustNativeTest::find_class(env, Some(&loader)).unwrap();
+            let b_test = RustNativeTest::bind(env, c_test).unwrap();
+
+            RustNativeTest::register_native_call(
+                env,
+                c_test,
+                system_fn!(|_: Context, _: Class, value: jint| -> jint { value + 1 }),
+            )
+            .unwrap();
+
+            assert_eq!(b_test.call_native::<jint>(env, c_test, 114514).unwrap(), 114515);
+            assert_eq!(b_test.native_call::<jint>(env, c_test, 1919810).unwrap(), 1919811);
         }
     });
 }

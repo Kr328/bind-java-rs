@@ -4,8 +4,8 @@ use syn::{
     braced,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    token::Brace,
     Token,
+    token::Brace,
 };
 
 use crate::{

@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
-use crate::{member::Member, member_struct::StructForMember, modifier::ModifiersExt, types::Type};
+use crate::{member::Member, member_struct::StructForMember, modifier::ModifiersExt, signature, types::Type};
 
 pub struct ImplBindForMember<'a> {
     member: &'a Member,
@@ -17,23 +17,9 @@ impl<'a> ToTokens for ImplBindForMember<'a> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let field_name = StructForMember::new(self.member).field_name();
 
-        fn method_signature(return_type: &Type, argument_types: impl Iterator<Item = Type>) -> String {
-            let mut result = String::new();
-
-            result.push('(');
-            for t in argument_types {
-                result.push_str(&t.to_signature());
-            }
-            result.push(')');
-
-            result.push_str(&return_type.to_signature());
-
-            result
-        }
-
         let ts = match self.member {
             Member::Constructor { arguments, .. } => {
-                let signature = method_signature(&Type::Void, arguments.iter().map(|a| a.type_name().to_type()));
+                let signature = signature::method_signature(&Type::Void, arguments.iter().map(|a| a.type_name().to_type()));
 
                 quote! {
                     #field_name: ::bind_java::find_method(ctx, class, "<init>", #signature)?
@@ -47,7 +33,8 @@ impl<'a> ToTokens for ImplBindForMember<'a> {
                 ..
             } => {
                 let name = name.to_string();
-                let signature = method_signature(&return_type.to_type(), arguments.iter().map(|a| a.type_name().to_type()));
+                let signature =
+                    signature::method_signature(&return_type.to_type(), arguments.iter().map(|a| a.type_name().to_type()));
 
                 if modifiers.is_static() {
                     quote! {

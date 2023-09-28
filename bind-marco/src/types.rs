@@ -5,8 +5,8 @@ use quote::format_ident;
 use syn::{
     bracketed,
     parse::{Parse, ParseStream},
-    token::Bracket,
     Token,
+    token::Bracket,
 };
 
 enum ClassNameSegment {
@@ -100,6 +100,7 @@ impl TypeName {
     }
 }
 
+#[derive(Clone)]
 pub enum Type {
     Void,
     Boolean,

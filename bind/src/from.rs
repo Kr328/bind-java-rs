@@ -2,7 +2,7 @@ use std::ptr::null_mut;
 
 use jni_sys::{
     jboolean, jbooleanArray, jbyte, jbyteArray, jchar, jcharArray, jdouble, jdoubleArray, jfloat, jfloatArray, jint, jintArray,
-    jlong, jlongArray, jobject, jobjectArray, jshort, jshortArray, jsize, jstring, JNI_ABORT,
+    jlong, jlongArray, JNI_ABORT, jobject, jobjectArray, jshort, jshortArray, jsize, jstring,
 };
 
 use crate::{call, Context, Result};
