@@ -5,7 +5,7 @@ use jni_sys::{
     jlong, jlongArray, jobject, jobjectArray, jshort, jshortArray, jsize, jstring,
 };
 
-use crate::{call, Context, Result, with_pushed_frame};
+use crate::{call, with_pushed_frame, Context, Result};
 
 pub trait IntoJava<T> {
     fn into_java(self, ctx: Context) -> Result<T>;
@@ -49,6 +49,17 @@ impl IntoJava<jstring> for String {
 impl IntoJava<jstring> for &String {
     fn into_java(self, ctx: Context) -> Result<jstring> {
         IntoJava::into_java(self.as_str(), ctx)
+    }
+}
+
+impl<T: IntoJava<jobject>> IntoJava<jobject> for Option<T> {
+    fn into_java(self, ctx: Context) -> Result<jobject> {
+        let value = match self {
+            Some(v) => v.into_java(ctx)?,
+            None => null_mut(),
+        };
+
+        Ok(value)
     }
 }
 

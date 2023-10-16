@@ -2,7 +2,7 @@ use std::ptr::null_mut;
 
 use jni_sys::{
     jboolean, jbooleanArray, jbyte, jbyteArray, jchar, jcharArray, jdouble, jdoubleArray, jfloat, jfloatArray, jint, jintArray,
-    jlong, jlongArray, JNI_ABORT, jobject, jobjectArray, jshort, jshortArray, jsize, jstring,
+    jlong, jlongArray, jobject, jobjectArray, jshort, jshortArray, jsize, jstring, JNI_ABORT,
 };
 
 use crate::{call, Context, Result};
@@ -44,6 +44,18 @@ impl FromJava<jstring> for String {
         unsafe { call!(v1_1, ctx, DeleteLocalRef, value) };
 
         Ok(result.unwrap())
+    }
+}
+
+impl<T: FromJava<jobject>> FromJava<jobject> for Option<T> {
+    unsafe fn from_java(value: jobject, ctx: Context) -> Result<Self> {
+        let value = if !value.is_null() {
+            Some(T::from_java(value, ctx)?)
+        } else {
+            None
+        };
+
+        Ok(value)
     }
 }
 
