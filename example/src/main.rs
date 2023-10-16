@@ -27,7 +27,7 @@ bind_java! {
 
     @ClassName("java.nio.charset.Charset")
     class JavaCharset {
-        java.nio.CharBuffer decode(java.nio.ByteBuffer buffer);
+        java.nio.CharBuffer decode(java.nio.ByteBuffer byteBuffer);
     }
 
     @ClassName("java.nio.charset.StandardCharsets")

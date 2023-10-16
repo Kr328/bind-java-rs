@@ -1,3 +1,4 @@
+use convert_case::{Case, Casing};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 
@@ -46,7 +47,10 @@ fn build_invoke_func<'a>(
         Target::This => (Ident::new("this", Span::call_site()), quote! { ::bind_java::Object }),
         Target::Class => (Ident::new("class", Span::call_site()), quote! { ::bind_java::Class }),
     };
-    let args_names = arguments.iter().map(|a| &a.0).collect::<Vec<_>>();
+    let args_names = arguments
+        .iter()
+        .map(|a| Ident::new(&a.0.to_string().to_case(Case::Snake), a.0.span()))
+        .collect::<Vec<_>>();
     let args_types = arguments.iter().map(|a| a.1.render_jni_type()).collect::<Vec<_>>();
 
     quote! {
