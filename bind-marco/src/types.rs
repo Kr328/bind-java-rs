@@ -1,12 +1,11 @@
 use std::fmt::{Display, Formatter};
 
 use proc_macro2::{Delimiter, Ident, TokenStream};
-use quote::format_ident;
 use syn::{
     bracketed,
     parse::{Parse, ParseStream},
-    Token,
     token::Bracket,
+    Token,
 };
 
 enum ClassNameSegment {
@@ -170,45 +169,6 @@ impl Type {
 
     pub fn render_jni_type(&self) -> TokenStream {
         self.to_jni_type().parse().unwrap()
-    }
-
-    pub fn to_method_key(&self) -> &'static str {
-        match self {
-            Type::Void => "Void",
-            Type::Boolean => "Boolean",
-            Type::Byte => "Byte",
-            Type::Char => "Char",
-            Type::Short => "Short",
-            Type::Int => "Int",
-            Type::Long => "Long",
-            Type::Float => "Float",
-            Type::Double => "Double",
-            _ => "Object",
-        }
-    }
-
-    pub fn to_call_method_name(&self) -> Ident {
-        format_ident!("Call{}Method", self.to_method_key())
-    }
-
-    pub fn to_call_static_method_name(&self) -> Ident {
-        format_ident!("CallStatic{}Method", self.to_method_key())
-    }
-
-    pub fn to_get_field_method_name(&self) -> Ident {
-        format_ident!("Get{}Field", self.to_method_key())
-    }
-
-    pub fn to_get_static_field_method_name(&self) -> Ident {
-        format_ident!("GetStatic{}Field", self.to_method_key())
-    }
-
-    pub fn to_set_field_method_name(&self) -> Ident {
-        format_ident!("Set{}Field", self.to_method_key())
-    }
-
-    pub fn to_set_static_field_method_name(&self) -> Ident {
-        format_ident!("SetStatic{}Field", self.to_method_key())
     }
 }
 

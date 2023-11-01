@@ -2,7 +2,7 @@ use std::ffi::CString;
 
 use jni_sys::{jfieldID, jmethodID, JNINativeMethod};
 
-use crate::{call, Class, Context, invoke_with_throwable, Result};
+use crate::{call, invoke_with_throwable, Class, Context, Result};
 
 pub fn find_class(ctx: Context, internal_name: &str) -> Result<Class> {
     let name = CString::new(internal_name).unwrap();

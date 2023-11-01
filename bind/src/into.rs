@@ -2,7 +2,7 @@ use std::ptr::null_mut;
 
 use jni_sys::{
     jboolean, jbooleanArray, jbyte, jbyteArray, jchar, jcharArray, jdouble, jdoubleArray, jfloat, jfloatArray, jint, jintArray,
-    jlong, jlongArray, jobject, jobjectArray, jshort, jshortArray, jsize, jstring,
+    jlong, jlongArray, jobject, jobjectArray, jshort, jshortArray, jsize, jstring, jvalue,
 };
 
 use crate::{call, with_pushed_frame, Context, Result};
@@ -139,3 +139,27 @@ impl IntoJava<jobjectArray> for Vec<String> {
         IntoJava::into_java(&self[..], ctx)
     }
 }
+
+pub trait IntoValue {
+    fn into_value(self) -> jvalue;
+}
+
+macro_rules! value_impl {
+    ($typ:ty, $sig:ident) => {
+        impl IntoValue for $typ {
+            fn into_value(self) -> jvalue {
+                jvalue { $sig: self }
+            }
+        }
+    };
+}
+
+value_impl!(jboolean, z);
+value_impl!(jbyte, b);
+value_impl!(jchar, c);
+value_impl!(jshort, s);
+value_impl!(jint, i);
+value_impl!(jlong, j);
+value_impl!(jfloat, f);
+value_impl!(jdouble, d);
+value_impl!(jobject, l);

@@ -1,6 +1,6 @@
 use crate::types::Type;
 
-pub fn method_signature(return_type: &Type, argument_types: impl Iterator<Item=Type>) -> String {
+pub fn method_signature(return_type: &Type, argument_types: impl Iterator<Item = Type>) -> String {
     let mut result = String::new();
 
     result.push('(');

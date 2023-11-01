@@ -231,3 +231,28 @@ pub fn test_register_native() {
         }
     });
 }
+
+#[test]
+pub fn test_boolean_parameter() {
+    with_java_vm(|ctx| {
+        bind_java! {
+            @ClassName("java.util.concurrent.atomic.AtomicBoolean")
+            class JavaAtomicBoolean {
+                JavaAtomicBoolean(boolean initialValue);
+                boolean compareAndSet(boolean expect, boolean update);
+            }
+        }
+
+        unsafe {
+            let c_atomic_boolean = JavaAtomicBoolean::find_class(ctx, None).unwrap();
+            let b_atomic_boolean = JavaAtomicBoolean::bind(ctx, c_atomic_boolean).unwrap();
+            let o_atomic_boolean: jobject = b_atomic_boolean.new(ctx, c_atomic_boolean, true).unwrap();
+
+            let success: bool = b_atomic_boolean.compare_and_set(ctx, o_atomic_boolean, true, false).unwrap();
+            assert!(success);
+
+            let success: bool = b_atomic_boolean.compare_and_set(ctx, o_atomic_boolean, true, false).unwrap();
+            assert!(!success);
+        }
+    });
+}

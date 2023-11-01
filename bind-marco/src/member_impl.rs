@@ -27,13 +27,19 @@ impl Target {
     }
 }
 
+enum ArgumentsTransform {
+    JTypedFlatten,
+    JValueArray,
+}
+
 fn build_invoke_func<'a>(
     name: &Ident,
     return_type: &Type,
     target: Target,
-    func_name: &Ident,
-    id_field_name: &Ident,
     arguments: &[(Ident, Type)],
+    func_name: &Ident,
+    arguments_transform: ArgumentsTransform,
+    invoke_id: &Ident,
 ) -> TokenStream {
     let (generic_list, return_type) = match return_type {
         Type::Void => (quote! {}, quote! { () }),
@@ -53,6 +59,21 @@ fn build_invoke_func<'a>(
         .collect::<Vec<_>>();
     let args_types = arguments.iter().map(|a| a.1.render_jni_type()).collect::<Vec<_>>();
 
+    let body = match arguments_transform {
+        ArgumentsTransform::JTypedFlatten => {
+            quote! {
+                ::bind_java::#func_name(ctx, #target_name, self.#invoke_id, #((#args_names).into_java(ctx)?),*)
+            }
+        }
+        ArgumentsTransform::JValueArray => {
+            quote! {
+                use ::bind_java::IntoValue;
+
+                ::bind_java::#func_name(ctx, #target_name, self.#invoke_id, &[#((#args_names).into_java(ctx)?.into_value()),*])
+            }
+        }
+    };
+
     quote! {
         pub unsafe fn #name #generic_list (
             &self,
@@ -60,14 +81,7 @@ fn build_invoke_func<'a>(
             #target_name: #target_type,
             #(#args_names: impl ::bind_java::IntoJava<#args_types>),*
         ) -> ::bind_java::Result<#return_type> {
-            ::bind_java::_invoke!(
-                #return_type,
-                ctx,
-                #func_name,
-                #target_name,
-                self.#id_field_name,
-                #(#args_names),*
-            )
+            #body
         }
     }
 }
@@ -109,30 +123,6 @@ fn build_register_func(
     }
 }
 
-fn resolve_call_func_name(return_type: &Type, modifiers: &Repeat<Modifier>) -> Ident {
-    if modifiers.is_static() {
-        return_type.to_call_static_method_name()
-    } else {
-        return_type.to_call_method_name()
-    }
-}
-
-fn resolve_get_field_name(return_type: &Type, modifiers: &Repeat<Modifier>) -> Ident {
-    if modifiers.is_static() {
-        return_type.to_get_static_field_method_name()
-    } else {
-        return_type.to_get_field_method_name()
-    }
-}
-
-fn resolve_set_field_name(return_type: &Type, modifiers: &Repeat<Modifier>) -> Ident {
-    if modifiers.is_static() {
-        return_type.to_set_static_field_method_name()
-    } else {
-        return_type.to_set_field_method_name()
-    }
-}
-
 pub struct ImplForMember<'a> {
     member: &'a Member,
 }
@@ -159,9 +149,10 @@ impl<'a> ToTokens for ImplForMember<'a> {
                     &rs_name,
                     &Type::Object("java/lang/Object".to_owned()),
                     Target::Class,
-                    &Ident::new("NewObject", Span::call_site()),
-                    &field_name,
                     &arguments.iter().map(|a| a.into()).collect::<Vec<_>>(),
+                    &Ident::new("new_object", Span::call_site()),
+                    ArgumentsTransform::JValueArray,
+                    &field_name,
                 ));
             }
             Member::Method {
@@ -180,9 +171,17 @@ impl<'a> ToTokens for ImplForMember<'a> {
                     &rs_name,
                     &return_type,
                     target,
-                    &resolve_call_func_name(&return_type, modifiers),
-                    &field_name,
                     &arguments,
+                    &Ident::new(
+                        if modifiers.is_static() {
+                            "call_static_method"
+                        } else {
+                            "call_method"
+                        },
+                        Span::call_site(),
+                    ),
+                    ArgumentsTransform::JValueArray,
+                    &field_name,
                 ));
 
                 if modifiers.is_native() {
@@ -207,9 +206,17 @@ impl<'a> ToTokens for ImplForMember<'a> {
                     &format_ident!("get_{}", rs_name),
                     &field_type,
                     Target::from_modifiers(modifiers),
-                    &resolve_get_field_name(&field_type, modifiers),
-                    &field_name,
                     &[],
+                    &Ident::new(
+                        if modifiers.is_static() {
+                            "get_static_field"
+                        } else {
+                            "get_field"
+                        },
+                        Span::call_site(),
+                    ),
+                    ArgumentsTransform::JTypedFlatten,
+                    &field_name,
                 ));
 
                 if !modifiers.is_final() {
@@ -217,9 +224,17 @@ impl<'a> ToTokens for ImplForMember<'a> {
                         &format_ident!("set_{}", rs_name),
                         &Type::Void,
                         Target::from_modifiers(modifiers),
-                        &resolve_set_field_name(&field_type, modifiers),
-                        &field_name,
                         &[(Ident::new("value", rs_name.span()), field_type)],
+                        &Ident::new(
+                            if modifiers.is_static() {
+                                "set_static_field"
+                            } else {
+                                "set_field"
+                            },
+                            Span::call_site(),
+                        ),
+                        ArgumentsTransform::JTypedFlatten,
+                        &field_name,
                     ));
                 }
             }

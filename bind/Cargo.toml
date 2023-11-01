@@ -4,5 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-jni-sys = "0.4"
 bind-java-marco = { path = "../bind-marco" }
+
+jni-sys = "0.4"
+paste = "1.0"
