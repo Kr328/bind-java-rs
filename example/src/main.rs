@@ -1,6 +1,6 @@
 use jni_sys::{jlong, jobject, jstring};
 
-use bind_java::{bind_java, call};
+use bind_java::{bind_java, call, ClassBinding, WithClass};
 
 use crate::vm::with_java_vm;
 

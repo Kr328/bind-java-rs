@@ -68,24 +68,6 @@ impl ToTokens for Class {
         let struct_impls = self.members.iter().map(|m| ImplForMember::new(m));
         let struct_impl_bind = self.members.iter().map(|m| ImplBindForMember::new(m));
 
-        let bind_ident = Ident::new("bind", name.span());
-        let find_class = if let Some(class_name) = class_name {
-            let find_class_name = Ident::new("find_class", name.span());
-            let internal_class_name = class_name.replace('.', "/");
-
-            quote! {
-                pub fn #find_class_name(ctx: ::bind_java::Context, loader: ::std::option::Option<&dyn ::bind_java::ClassLoader>) -> ::bind_java::Result<::bind_java::Class> {
-                    if let Some(loader) = loader {
-                        loader.load_class(ctx, #class_name)
-                    } else {
-                        ::bind_java::find_class(ctx, #internal_class_name)
-                    }
-                }
-            }
-        } else {
-            quote! {}
-        };
-
         tokens.extend(quote! {
             struct #name {
                 #(#struct_fields),*
@@ -98,15 +80,31 @@ impl ToTokens for Class {
                 #(#struct_impls)*
             }
 
-            impl #name {
-                pub unsafe fn #bind_ident(ctx: ::bind_java::Context, class: ::bind_java::Class) -> ::bind_java::Result<Self> {
+            impl ::bind_java::ClassBinding for #name {
+                unsafe fn bind(ctx: ::bind_java::Context, class: ::bind_java::Class) -> ::bind_java::Result<Self> {
                     Ok(#name {
                         #(#struct_impl_bind),*
                     })
                 }
-
-                #find_class
             }
         });
+
+        if let Some(class_name) = class_name {
+            let internal_class_name = class_name.replace('.', "/");
+
+            tokens.extend(quote! {
+                impl ::bind_java::WithClass for #name {
+                    const CLASS_NAME: &'static str = #class_name;
+
+                    fn find_class(ctx: ::bind_java::Context, loader: ::std::option::Option<&dyn ::bind_java::ClassLoader>) -> ::bind_java::Result<::bind_java::Class> {
+                        if let Some(loader) = loader {
+                            loader.load_class(ctx, #class_name)
+                        } else {
+                            ::bind_java::find_class(ctx, #internal_class_name)
+                        }
+                    }
+                }
+            });
+        }
     }
 }

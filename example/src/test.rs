@@ -4,7 +4,7 @@ use jni_sys::{jint, jobject, jstring};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use bind_java::{bind_java, call, system_fn, Class, ClassLoader, Context, FromJava, IntoJava, Object};
+use bind_java::{bind_java, call, system_fn, Class, ClassBinding, ClassLoader, Context, FromJava, IntoJava, Object, WithClass};
 
 use crate::vm::with_java_vm;
 

@@ -2,6 +2,7 @@ use jni_sys::{jclass, jobject, jthrowable, JNIEnv};
 
 pub use bind::*;
 pub use bind_java_marco::bind_java;
+pub use binding::*;
 pub use frame::*;
 pub use from::*;
 pub use func::*;
@@ -10,6 +11,7 @@ pub use invoke::*;
 pub use loader::*;
 
 mod bind;
+mod binding;
 mod call;
 mod frame;
 mod from;
